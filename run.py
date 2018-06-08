@@ -35,7 +35,7 @@ def getSegment(c, k, idx, t):
         lerp(c[idx]['c2'],k[idx]['c2'], t),
         lerp(c[idx]['end'],k[idx]['end'], t))
 
-def generate(u, v, idx):
+def generate(u, v, x, y, idx):
     seg1 = getSegment(c, k, 0, 1-u)
     seg2 = getSegment(c, k, 1, 1-u)
     seg3 = getSegment(c, k, 2, 1-u)
@@ -51,7 +51,13 @@ def generate(u, v, idx):
         ))
 
     pathAttributes = {
-        "stroke-width": '66',
+        "stroke-width": x,
+        "stroke": "#000",
+        "fill": "#fff"
+    }
+
+    pathAttributesl = {
+        "stroke-width": y,
         "stroke": "#000",
         "fill": "#fff"
     }
@@ -63,7 +69,7 @@ def generate(u, v, idx):
     }
 
     paths = [ck, ll0]
-    attributes = [pathAttributes, pathAttributes]
+    attributes = [pathAttributes, pathAttributesl]
     wsvg(paths, attributes=attributes, svg_attributes=svg_attributes, filename='run/output' + str(idx+50) + '.svg')
 
 def bind(value, lower, upper):
@@ -76,22 +82,35 @@ def bind(value, lower, upper):
 # run
 steps = 50
 stepsize = 0.02
-# u = random.uniform(0, 1)
-# v = random.uniform(0, 1)
-
+u = random.uniform(0, 1)
+v = random.uniform(0, 1)
+x = random.uniform(1, 100)
+y = random.uniform(1, 100)
 for t in range(0, steps+1):
-    generate(t/steps, t/steps, t)
+    generate(u, v, x, y, t)
 
-    #
-    # if random.uniform(0, 1) > 0.5:
-    #     u = u + stepsize
-    # else:
-    #     u = u - stepsize
-    #
-    # if random.uniform(0, 1) > 0.5:
-    #     v = v + stepsize
-    # else:
-    #     v = v - stepsize
-    #
-    # u = bind(u, 0, 1)
-    # v = bind(v, 0, 1)
+
+    if random.uniform(0, 1) > 0.5:
+        u = u + stepsize
+    else:
+        u = u - stepsize
+
+    if random.uniform(0, 1) > 0.5:
+        v = v + stepsize
+    else:
+        v = v - stepsize
+
+    if random.uniform(0, 1) > 0.5:
+        x = x + 5
+    else:
+        x = x - 5
+
+    if random.uniform(0, 1) > 0.5:
+        y = y + 5
+    else:
+        y = y - 5
+
+    u = bind(u, 0, 1)
+    v = bind(v, 0, 1)
+    x = bind(x, 1, 100)
+    y = bind(y, 1, 100)
