@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from svgpathtools import Path, CubicBezier, wsvg, parse_path
-import math
+import random
 
 # https://github.com/mathandy/svgpathtools
 # http://spencermortensen.com/articles/bezier-circle/
@@ -35,19 +35,19 @@ def getSegment(c, k, idx, t):
         lerp(c[idx]['c2'],k[idx]['c2'], t),
         lerp(c[idx]['end'],k[idx]['end'], t))
 
-def generate(t, idx):
-    seg1 = getSegment(c, k, 0, 1-t)
-    seg2 = getSegment(c, k, 1, 1-t)
-    seg3 = getSegment(c, k, 2, 1-t)
-    seg4 = getSegment(c, k, 3, 1-t)
+def generate(u, v, idx):
+    seg1 = getSegment(c, k, 0, 1-u)
+    seg2 = getSegment(c, k, 1, 1-u)
+    seg3 = getSegment(c, k, 2, 1-u)
+    seg4 = getSegment(c, k, 3, 1-u)
 
     ck = Path(seg1,seg2,seg3,seg4)
 
     ll0 = Path(CubicBezier(
-            lerp(l['start'], l0['start'], 0),
-            lerp(l['c1'],l0['c1'], 0),
-            lerp(l['c2'],l0['c2'], 0),
-            lerp(l['end'],l0['end'], 0)
+            lerp(l['start'], l0['start'], v),
+            lerp(l['c1'],l0['c1'], v),
+            lerp(l['c2'],l0['c2'], v),
+            lerp(l['end'],l0['end'], v)
         ))
 
     pathAttributes = {
@@ -64,9 +64,34 @@ def generate(t, idx):
 
     paths = [ck, ll0]
     attributes = [pathAttributes, pathAttributes]
-    wsvg(paths, attributes=attributes, svg_attributes=svg_attributes, filename='run/output' + str(idx) + '.svg')
+    wsvg(paths, attributes=attributes, svg_attributes=svg_attributes, filename='run/output' + str(idx+50) + '.svg')
+
+def bind(value, lower, upper):
+    if value < lower:
+        return lower
+    if value > upper:
+        return upper
+    return value
 
 # run
 steps = 50
+stepsize = 0.02
+# u = random.uniform(0, 1)
+# v = random.uniform(0, 1)
+
 for t in range(0, steps+1):
-  generate(t/steps, t)
+    generate(t/steps, t/steps, t)
+
+    #
+    # if random.uniform(0, 1) > 0.5:
+    #     u = u + stepsize
+    # else:
+    #     u = u - stepsize
+    #
+    # if random.uniform(0, 1) > 0.5:
+    #     v = v + stepsize
+    # else:
+    #     v = v - stepsize
+    #
+    # u = bind(u, 0, 1)
+    # v = bind(v, 0, 1)
