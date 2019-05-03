@@ -11,8 +11,8 @@ if __name__ == '__main__':
             data = json.load(data_file)
             ck = CK(data['program'])
             renderer = Renderer(ck)
-            viewer = Viewer(renderer, 30, data['output'])
+            viewer = Viewer(renderer, 60, data['output'])
     else:
         ck = CK()
         renderer = Renderer(ck)
-        viewer = Viewer(renderer, 30)
+        viewer = Viewer(renderer, 60)

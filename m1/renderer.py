@@ -21,7 +21,8 @@ class Renderer:
         img = Image.new("RGB", (600, 600), "white")
         canvas = aggdraw.Draw(img)
 
-        outline = aggdraw.Pen("black", self.width)
+        outline = aggdraw.Pen('rgb(0, 0, 0)', self.width)
+        #outline = aggdraw.Pen("black", self.width)
         # fill = aggdraw.Brush("black")
         fill = None
 

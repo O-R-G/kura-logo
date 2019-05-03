@@ -1,4 +1,4 @@
-import Tkinter as tk
+import tkinter as tk
 from PIL import ImageTk
 import time
 
@@ -23,7 +23,7 @@ class Viewer:
         self.panel1 = tk.Label(self.root, image=tmp)
         self.panel1.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
 
-        self.root.after(self.fps, self.render)
+        self.root.after(int(self.fps * 1000), self.render)
         self.root.mainloop()
 
 

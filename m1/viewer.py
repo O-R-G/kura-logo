@@ -1,4 +1,4 @@
-import Tkinter as tk
+import tkinter as tk
 from PIL import ImageTk
 import time
 
@@ -9,7 +9,7 @@ class Viewer:
         self.root = tk.Tk()
         self.root.title('Kura/Cura')
         self.renderer = renderer
-        self.fps = 1000/fps
+        self.fps = int(1000/fps)
 
         self.frame = 0
         self.output = output

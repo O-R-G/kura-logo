@@ -62,17 +62,22 @@ class CK:
         [(225.6,175.1), (288.05,112.65), (288.05,112.65), (350.5,50.2)]
     ]
 
-    stepsize = 0.02
+    quiveringStates = [False, False, False, False];
+    pauseStates     = [False, False, False, False];
+
+    stepsize = 0.02;
 
     program = False
     data = None
 
     def __init__(self, data=None):
+
         if data == None:
-            self.q1t = random.uniform(0, 1)
-            self.q2t = random.uniform(0, 1)
-            self.q3t = random.uniform(0, 1)
-            self.q4t = random.uniform(0, 1)
+            self.q1t, self.q1tRWIndex, self.q1tRWFactor, self.q1tDirection = self.initializeHelper()
+            self.q2t, self.q2tRWIndex, self.q2tRWFactor, self.q2tDirection = self.initializeHelper()
+            self.q3t, self.q3tRWIndex, self.q3tRWFactor, self.q3tDirection = self.initializeHelper()
+            self.q4t, self.q4tRWIndex, self.q4tRWFactor, self.q4tDirection = self.initializeHelper()
+
         else:
             self.program = True
             self.data = data
@@ -111,35 +116,127 @@ class CK:
             return upper
         return value
 
-    def stepHelper(self, qt):
-        if random.uniform(0, 1) > 0.5:
-            qt = qt + self.stepsize
-        else:
-            qt = qt - self.stepsize
+    def initializeHelper(self): 
+        qt = random.uniform(0, 1)
 
-        return self.bind(qt, 0, 1)
+        maxFactor = 10
+        rwIndex   = random.randint(-1, maxFactor + 1)
+        rwFactor  = maxFactor
+        # rwFactor  = random.randint(maxFactor-20, maxFactor)
+        direction = (2 * random.randint(0,1) - 1)
+
+        return (qt, rwIndex, rwFactor, direction)
+
+    # Returns the appropriate direction for a quivering limb
+    def quiver(self, rwIndex, rwFactor, limb_number, direction): 
+        # returned_direction = direction;
+        new_direction = random.uniform(0,1);
+
+        if rwIndex < 0: 
+            if random.random() > 0.66: 
+                direction = -new_direction;
+            else: 
+                direction = new_direction;
+        elif rwIndex >= rwFactor: 
+            if random.random() > 0.66: 
+                direction = new_direction;
+            else: 
+                direction = -new_direction;
+
+        returned_direction = direction;
+
+        return returned_direction;
+
+
+    # Returns the appropriate direction for a growing limb
+    def slide(self, rwIndex, rwFactor, direction): 
+
+        if (direction == 0): 
+                direction = 2 * random.randint(0,1) - 1;
+                direction = direction * random.uniform(0.5,1);
+
+        returned_direction = direction;
+        new_direction = 1;
+
+        if rwIndex < 0:         
+            returned_direction = new_direction;
+        elif rwIndex >= random.randint(8,200) * rwFactor: 
+            returned_direction = -new_direction;
+
+        return returned_direction;
+
+
+    def pause(self): 
+        self.pauseStates = [True, True, True, True];
+        self.quiveringStates = [False, False, False, False];
+        returned_direction = 0;
+        return returned_direction;
+
+
+    # Allow a quadrant to grow/shrink for a given period of time, then reevaluate whether to grow/shrink
+    def stepHelper(self, qt, rwIndex, rwFactor, direction, limb_number):
+
+        isPaused    = self.pauseStates[limb_number];
+        isQuivering = self.quiveringStates[limb_number];
+
+        # Randomize probability of pausing: 
+        random_probability = random.uniform(0, 1);
+        if (isPaused == False): 
+            if (random_probability < 1.0 / 2000.0): 
+                isPaused = True;  # Pause a moving CK w/ probability 1/300
+                self.pauseStates = [True, True, True, True];
+        else: 
+            if (random_probability < 1.0 / 1000.0):
+                # print("hello") 
+                isPaused = False;  # Move a paused CK w/ probabilty 1/50
+                self.pauseStates = [False, False, False, False];
+
+        # Randomize if an arm is quivering
+        if (not any(self.quiveringStates)): # if no limb is quivering
+            if (random_probability < (1.0 / 50.0) * (limb_number + 1)):
+                self.quiveringStates[limb_number] = True;
+
+        # PAUSE
+        if isPaused == True:
+            direction = self.pause();
+
+        # QUIVER
+        elif isQuivering == True: 
+            direction = self.quiver(rwIndex, rwFactor, limb_number, direction);
+
+        # SLIDE        
+        else: 
+            # direction = self.quiver(rwIndex, rwFactor, direction);
+            direction = self.slide(rwIndex, rwFactor, direction);
+            # print("SLIDE: " + str(direction)) 
+
+        qt = qt + (direction * self.stepsize)
+        rwIndex = rwIndex + direction
+
+        return (self.bind(qt, 0, 1), rwIndex, direction)
 
     def step(self):
+
         if self.program:
             self.q1t = self.q1t + self.stepsize*self.q1StepDirection
             self.q2t = self.q2t + self.stepsize*self.q2StepDirection
             self.q3t = self.q3t + self.stepsize*self.q3StepDirection
             self.q4t = self.q4t + self.stepsize*self.q4StepDirection
 
-            if (abs(self.data[self.nextIdx]['q1']-self.q1t) < .001 and
-            abs(self.data[self.nextIdx]['q2']-self.q2t) < .001 and
-            abs(self.data[self.nextIdx]['q3']-self.q3t) < .001 and
-            abs(self.data[self.nextIdx]['q4']-self.q4t) < .001):
+            if (abs(self.data[self.nextIdx]['q1'] - self.q1t) < 0.001 and
+                abs(self.data[self.nextIdx]['q2'] - self.q2t) < 0.001 and
+                abs(self.data[self.nextIdx]['q3'] - self.q3t) < 0.001 and
+                abs(self.data[self.nextIdx]['q4'] - self.q4t) < 0.001):
                 if len(self.data) == self.nextIdx+1:
                     return False
                 else:
                     self.currentIdx = self.nextIdx
-                    self.nextIdx = self.nextIdx +1
+                    self.nextIdx = self.nextIdx + 1
                     self.updateStepDirection()
             return True
         else:
-            self.q1t = self.stepHelper(self.q1t)
-            self.q2t = self.stepHelper(self.q2t)
-            self.q3t = self.stepHelper(self.q3t)
-            self.q4t = self.stepHelper(self.q4t)
+            self.q1t, self.q1tRWIndex, self.q1tDirection = self.stepHelper(self.q1t, self.q1tRWIndex, self.q1tRWFactor, self.q1tDirection, 0);
+            self.q2t, self.q2tRWIndex, self.q2tDirection = self.stepHelper(self.q2t, self.q2tRWIndex, self.q2tRWFactor, self.q2tDirection, 1);
+            self.q3t, self.q3tRWIndex, self.q3tDirection = self.stepHelper(self.q3t, self.q3tRWIndex, self.q3tRWFactor, self.q3tDirection, 2);
+            self.q4t, self.q4tRWIndex, self.q4tDirection = self.stepHelper(self.q4t, self.q4tRWIndex, self.q4tRWFactor, self.q4tDirection, 3);
             return True
